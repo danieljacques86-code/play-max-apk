@@ -1,0 +1,44 @@
+name: Build Play-Max APK from Website
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Permite rodar manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install wget and unzip
+      run: sudo apt-get update && sudo apt-get install -y wget unzip
+
+    - name: Download site content
+      run: |
+        wget -r -k -l 2 -p -E -nc --wait=1 https://danieljacques86-code.github.io/Play-max/ -P site/
+        # Ajusta paths para WebView (index.html como raiz)
+
+    - name: Website to APK Action
+      id: apk
+      uses: darkshredder/web-to-app-action@v1  # Use @main ou versão latest
+      with:
+        build-folder-path: "site/Play-max"  # Pasta com index.html e assets
+        app-name: "Play-Max"
+        app-package: "com.playmax.app"  # ID único da app
+        app-version: "1.0.0"
+        output-folder-path: "apks"
+        # Opcional: keystore-base64 para assinatura (gere um keystore e codifique em base64)
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Play-Max-APK
+        path: apks/*.apk
+        retention-days: 30
